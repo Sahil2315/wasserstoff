@@ -9,7 +9,7 @@ app.use(cors())
 
 //  Milestone - 1
 
-let servers = [
+let servers = [                  // Array of Servers
     {
         assigned: [],
         serverName: "Server_1",
@@ -38,7 +38,7 @@ let servers = [
 
 let currRequest = 0
 
-setInterval(() => {
+setInterval(() => {              //Function to simulate the Completion of Task with respect to CPU Time Units which are represented by 1 Second per CPU Time    
     for(let i=0; i<servers.length; i++){
         if(servers[i].assigned.length > 0){
             if(servers[i].assigned[0].completedTime < servers[i].assigned[0].reqTime){
@@ -58,7 +58,7 @@ app.get('/connect', (req, res) => {
     }, 1000)
 })
 
-let serverAssign = (req, res, next) => {
+let serverAssign = (req, res, next) => {        //Middleware Function to Assign The Requests to Appropriate Servers
     let selected = 0
     let minRem = servers[0].totalRemTime
     for(let i=1; i< servers.length; i++){
@@ -78,29 +78,30 @@ let serverAssign = (req, res, next) => {
     next()
 }
 
-app.post('/assign', serverAssign, (req, res) => {
+app.post('/assign', serverAssign, (req, res) => {                            //API Endpoint for Assigning Requests which calls for the Middleware and Redirects to that Server
     let redirectString = `/server/:${servers[req.selectedServer].serverName}`
     res.redirect(redirectString)
 })
 
-app.get('/server/:serverName', (req, res) => {
+app.get('/server/:serverName', (req, res) => {                              //Dynamic API Endpoint for Responding to the User with the Server Name to which that Request was Assigned
     res.send({'assigned': req.params.serverName})
 })
 
 // Milestone - 2
 
-let fifoQueue = []
-let fifoComplete = []
 
-let priorityQueue = []
-let PQCompleted = []
+let fifoQueue = []              //FIFO Queue
+let fifoComplete = []           //Array of Tasks Completed using FIFO
 
-let roundRobinQueue = []
-let RRQCompleted = []
+let priorityQueue = []          //Priority Queue
+let PQCompleted = []            //Array of Tasks Completed using Priority Queue
+
+let roundRobinQueue = []        //Round Robin Queue
+let RRQCompleted = []           //Array of Tasks Completed using Round Robin Queue
 
 let queReqNumber = 0
 
-setInterval(() => {
+setInterval(() => {             //Function whicch represents one CPU Time Unit by 1 Second and Handles the Queuing of Tasks in the respective Queues
     if(fifoQueue.length == 0){
         return
     }
@@ -126,7 +127,7 @@ setInterval(() => {
 
 let newestRequest = 0
 
-let queueAssign = (req, res, next) => {
+let queueAssign = (req, res, next) => {  //Middleware Function to Assign Tasks into the 3 Queues
     //Insert Request to FIFO Queue
     fifoQueue.push({
         reqTime: parseInt(req.body.TimeUnits), 
@@ -166,12 +167,12 @@ let queueAssign = (req, res, next) => {
     next()
 }
 
-app.post('/assignToQueue', queueAssign, (req, res) => {
+app.post('/assignToQueue', queueAssign, (req, res) => {   //API Endpoint which Accepts the Request and Assigns the Tasks into the various Queues
     newestRequest = req.requestNumber
     res.send({'reqNumber': req.requestNumber})
 })
 
-io.on("connection", (socket) => {
+io.on("connection", (socket) => {             // Socket.IO Connection to send the Logging Information to the Frontend Dashboard
     setInterval(() => {
         io.to(socket.id).emit("servers", servers)
         io.to(socket.id).emit("queues", {
@@ -186,6 +187,6 @@ io.on("connection", (socket) => {
     }, 1000)
 })
 
-server.listen(5000, () => {
+server.listen(5000, () => {             
     console.log("Server Listening on Port 5000")
 })
